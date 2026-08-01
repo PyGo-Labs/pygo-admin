@@ -1,0 +1,146 @@
+{# src/layouts/admin.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token or '' }}">
+    <title>{% block title %}Admin — PyGo{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PyGo UI CSS -->
+    <link rel="stylesheet" href="/vendor/pygo-ui/pygo-ui.css">
+
+    <!-- PyGo Admin CSS -->
+    <link rel="stylesheet" href="/vendor/pygo-admin/admin.css">
+
+    <!-- HTMX + Alpine.js -->
+    <script src="/vendor/pygo-ui/htmx.min.js"></script>
+    <script src="/vendor/pygo-ui/alpine.min.js" defer></script>
+    <script src="/vendor/pygo-admin/admin.js" defer></script>
+
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased font-sans" x-data="{ sidebarOpen: false }">
+    <div class="flex min-h-screen">
+
+        <!-- Mobile sidebar overlay -->
+        <div x-show="sidebarOpen"
+          @click="sidebarOpen = false"
+          x-transition
+          class="fixed inset-0 bg-black/50 z-40 md:hidden">
+        </div>
+
+        <!-- Admin Sidebar -->
+        <aside :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}"
+          x-transition
+          class="fixed md:static md:translate-x-0 md:w-64 z-50 bg-white border-r border-gray-200 h-screen overflow-y-auto transition-transform duration-200 ease-in-out">
+
+          <!-- Logo -->
+          <div class="p-4 border-b border-gray-200">
+            <a href="/admin" class="text-xl font-bold text-blue-600">PyGo Admin</a>
+          </div>
+
+          <!-- Navigation -->
+          <nav class="mt-4">
+            {% block sidebar %}
+            <ul class="space-y-1 px-2">
+              <li>
+                <a href="/admin/dashboard" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9v4l-7 7v4l7 7V12z" />
+                  </svg>
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="/admin/models" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 110 4H5a2 2 0 110-4zm0 0V9a2 2 0 10-2-2M7 11V7a4 4 0 014-4v4m-4 0h8" />
+                  </svg>
+                  Modelos
+                </a>
+              </li>
+              <li>
+                <a href="/admin/users" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 0 1 2.828 1.155L16 6.5V4a.5.5 0 0 1 .5-.5h3" />
+                  </svg>
+                  Usuario
+                </a>
+              </li>
+              <li>
+                <a href="/admin/reports" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v1m3-1v1m3-1v1m-3 2v-2m-9 0h18" />
+                  </svg>
+                  Reportes
+                </a>
+              </li>
+              <li>
+                <a href="/admin/settings" class="flex items-center px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35" />
+                  </svg>
+                  Configuración
+                </a>
+              </li>
+            </ul>
+            {% endblock %}
+          </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto">
+
+          <!-- Topbar -->
+          <header class="bg-white border-b border-gray-200 px-4 py-3 md:py-4">
+            <div class="flex items-center justify-between">
+              <button @click="sidebarOpen = true" class="md:hidden p-2 text-gray-600 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <h1 class="text-xl font-semibold text-gray-900">
+                {% block page_title %}Dashboard{% endblock %}
+              </h1>
+
+              <div class="flex items-center gap-3">
+                <button class="p-2 text-gray-500 hover:text-gray-700">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 019 15H5v-4a2 2 0 112 0v5h1.293l1.707 1.707z" />
+                  </svg>
+                </button>
+                <div class="relative" x-data="{ open: false }">
+                  <button @click="open = !open" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                    <span class="hidden md:block text-sm mr-2">Admin</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div x-show="open" @click.outside="open = false" x-transition x-cloak
+                    class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                    <a href="/admin/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Perfil</a>
+                    <a href="/admin/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Config</a>
+                    <hr class="my-1">
+                    <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Salir</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <!-- Page content -->
+          {% block content %}
+          <div class="p-6">
+            {% block page_content %}{% endblock %}
+          </div>
+          {% endblock %}
+
+        </main>
+    </div>
+</body>
+</html>

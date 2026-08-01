@@ -1,0 +1,140 @@
+{# src/components/data-table/data-table.html #}
+{% macro data_table(endpoint, columns=[], rows=[], pagination=null, searchable=true, filters=null) %}
+<div x-data="dataTable('{{ endpoint }}', {
+  searchable: {{ searchable|tojson }},
+  filters: {{ filters|tojson|safe }}
+})" x-init="init()" class="bg-white rounded-lg shadow overflow-hidden">
+
+  <!-- Toolbar -->
+  <div class="p-4 border-b border-gray-200">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+      <!-- Search -->
+      {% if searchable %}
+      <div class="relative flex-1 max-w-md">
+        <input type="text"
+          x-model.debounce.300ms="search"
+          @input="loadData(1)"
+          placeholder="Buscar..."
+          class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      {% endif %}
+
+      <!-- Filters -->
+      {% if filters %}
+      <div class="flex flex-wrap gap-2">
+        {% for filter in filters %}
+        <select x-model="filters['{{ filter.field }}']"
+          @change="loadData(1)"
+          class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+          <option value="">{{ filter.placeholder|default('All ' ~ filter.label) }}</option>
+          {% for opt in filter.options %}
+          <option value="{{ opt.value|default(opt) }}">{{ opt.label|default(opt|title) }}</option>
+          {% endfor %}
+        </select>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          {% for col in columns %}
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            {% if col.sortable %}
+              <button @click="sortBy('{{ col.field }}')"
+                class="flex items-center gap-1 hover:text-gray-700 focus:outline-none">
+                {{ col.label }}
+                <span x-show="sortField === '{{ col.field }}'">
+                  <span x-show="sortDirection === 'asc'">↑</span>
+                  <span x-show="sortDirection === 'desc'">↓</span>
+                </span>
+              </button>
+            {% else %}
+              {{ col.label }}
+            {% endif %}
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+
+        <!-- Loading -->
+        <tr x-show="loading">
+          <td :colspan="{{ columns|length }}" class="px-6 py-8 text-center">
+            <div class="flex justify-center">
+              <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Empty -->
+        <tr x-show="!loading && data.length === 0">
+          <td :colspan="{{ columns|length }}" class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-sm text-gray-500">No se encontraron resultados</p>
+          </td>
+        </tr>
+
+        <!-- Rows -->
+        <template x-for="row in data" :key="row.id">
+          <tr class="hover:bg-gray-50 transition-colors">
+            {% for col in columns %}
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+              x-html="row.{{ col.field|default(col.field) }}">
+            </td>
+            {% endfor %}
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if pagination %}
+  <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+    <p class="text-sm text-gray-700">
+      Mostrando <span x-text="((currentPage - 1) * pageSize) + 1"></span>
+      a <span x-text="Math.min(currentPage * pageSize, totalItems)"></span>
+      de <span x-text="totalItems"></span> resultados
+    </p>
+
+    <div class="flex items-center gap-2">
+      <button @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1 || loading"
+        class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+        Anterior
+      </button>
+
+      <template x-for="page in visiblePages" :key="page">
+        <button @click="goToPage(page)"
+          :class="page === currentPage ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'"
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg transition-colors">
+          <span x-text="page"></span>
+        </button>
+      </template>
+
+      <button @click="goToPage(currentPage + 1)"
+        :disabled="currentPage >= totalPages || loading"
+        class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+        Siguiente
+      </button>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endmacro %}

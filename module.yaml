@@ -1,0 +1,39 @@
+name: pygo-admin
+version: 0.1.0
+description: "Admin panel components for PyGo — DataTable, FormBuilder, Dashboard widgets"
+author: "PyGo Labs"
+homepage: "https://pygo.dev/admin"
+repository: "https://github.com/pygo-labs/pygo-admin"
+documentation: "https://docs.pygo.dev/admin"
+
+pygo_version: ">=1.0.0"
+
+dependencies:
+  modules:
+    - pygo-ui: ">=0.1.0"  # Hereda Button, Input, Card, Modal, layouts, themes
+
+  assets:
+    - chart.js: "^4.4.0"
+    - sorttable.js: "^1.0.0"
+
+features:
+  - name: "data-table"
+    description: "Data tables with sorting and pagination"
+    enabled: true
+
+  - name: "form-builder"
+    description: "Auto-generated forms from models"
+    enabled: true
+
+  - name: "dashboard"
+    description: "Admin dashboard widgets (KPIs, charts)"
+    enabled: true
+
+ui:
+  config_path: "config/admin.yaml"
+  assets_path: "public/vendor/pygo-admin"
+  components_path: "components/pygo-admin"
+
+hooks:
+  on_install: "hooks.install"
+  on_uninstall: "hooks.uninstall"

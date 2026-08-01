@@ -1,0 +1,22 @@
+{
+  "name": "pygo-admin",
+  "version": "0.1.0",
+  "description": "Advanced admin panel components for PyGo Framework",
+  "author": "PyGo Labs",
+  "repository": "https://github.com/pygo-labs/pygo-admin",
+  "keywords": ["pygo", "admin", "dashboard", "datatable", "form-builder"],
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/build.js --watch",
+    "watch": "node scripts/build.js --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "esbuild": "^0.20.0",
+    "clean-css": "^5.3.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0"
+  }
+}

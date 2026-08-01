@@ -1,0 +1,47 @@
+{# src/components/dashboard/stat-widget.html #}
+{% macro stat_widget(label, value, icon=null, trend=null, trend_positive=true, color="blue") %}
+<div class="bg-white rounded-xl shadow p-6 {{ class }}">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-sm font-medium text-gray-600">{{ label }}</span>
+    {% if icon %}
+      <div class="p-2 bg-{{ color }}-50 rounded-lg">
+        {{ icon|safe }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="text-2xl font-bold text-gray-900 mb-2" x-text="formatNumber({{ value }})"></div>
+
+  {% if trend %}
+    <div class="flex items-center text-sm">
+      {% if trend_positive %}
+        <svg class="w-4 h-4 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 0l-6 6m6-6l6 6" />
+        </svg>
+        <span class="text-green-600">+{ { trend }}%</span>
+      {% else %}
+        <svg class="w-4 h-4 text-red-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l6-6m-6 6l-6-6" />
+        </svg>
+        <span class="text-red-600">-{ { trend }}%</span>
+      {% endif %}
+      <span class="text-gray-500 ml-2">vs last period</span>
+    </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro stat_widget_grid(widgets=[]) %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {% for widget in widgets %}
+    {{ stat_widget(
+      label=widget.label,
+      value=widget.value,
+      icon=widget.icon,
+      trend=widget.trend,
+      trend_positive=widget.trend_positive|default(true),
+      color=widget.color|default("blue")
+    ) }}
+  {% endfor %}
+</div>
+{% endmacro %}
