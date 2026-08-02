@@ -1,0 +1,133 @@
+{# src/components/dashboard/activity-feed.html #}
+{% macro activity_feed(
+  activities=[],
+  show_avatar=true,
+  show_timestamp=true,
+  max_items=10
+) %}
+<div x-data="activityFeed({
+  initialActivities: {{ activities|tojson|safe }},
+  maxItems: {{ max_items }}
+})" x-init="init()"
+  class="bg-white rounded-xl shadow-lg p-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">Actividad Reciente</h3>
+    <a href="/admin/audit" class="text-sm text-blue-600 hover:text-blue-700">
+      Ver todo →
+    </a>
+  </div>
+
+  <!-- Activity list -->
+  <div class="space-y-4">
+
+    <!-- Loading -->
+    <div x-show="loading" class="space-y-3">
+      <div x-for="i in 3" :key="i" class="flex items-start gap-3">
+        <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-3 bg-gray-200 rounded animate-pulse"></div>
+          <div class="h-3 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div x-show="!loading && activities.length === 0" class="text-center py-6">
+      <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <p class="text-gray-500">No hay actividad reciente</p>
+    </div>
+
+    <!-- Activity items -->
+    <div x-show="!loading">
+      <template x-for="item in visibleActivities" :key="item.id">
+        <div class="flex items-start gap-3">
+
+          <!-- Avatar -->
+          <div x-show="{{ show_avatar }}" class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+            {% if item.avatar %}
+              <img :src="item.avatar" :alt="item.user" class="w-8 h-8 rounded-full">
+            {% else %}
+              <span class="text-sm font-medium text-gray-600"
+                x-text="item.user.charAt(0)"></span>
+            {% endif %}
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1">
+            <div class="flex items-start justify-between">
+              <p class="text-sm text-gray-900">
+                <span class="font-medium" x-text="item.user"></span>
+                <span class="text-gray-600" x-html="item.action"></span>
+              </p>
+
+              <!-- Type badge -->
+              <span class="text-xs px-1.5 py-0.5 rounded"
+                :class="
+                  item.type === 'success' ? 'bg-green-100 text-green-800' :
+                  item.type === 'warning' ? 'bg-amber-100 text-amber-800' :
+                  item.type === 'error' ? 'bg-red-100 text-red-800' :
+                  'bg-blue-100 text-blue-800'
+                "
+                x-text="item.type|default('info')"></span>
+            </div>
+
+            <!-- Meta -->
+            <div x-show="{{ show_timestamp }}" class="mt-1 text-xs text-gray-500">
+              <span x-text="item.timestamp|formatDate"></span>
+              <span x-show="item.ip" class="mx-1">·</span>
+              <span x-text="item.ip"></span>
+            </div>
+
+            <!-- Details -->
+            <div x-show="item.details" class="mt-2 text-xs text-gray-600 bg-gray-50 rounded p-2">
+              <pre x-text="JSON.stringify(item.details, null, 2)" class="whitespace-pre-wrap"></pre>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+</div>
+{% endmacro %}
+
+{% macro activity_item(user, action, time=null, type="info", avatar=null, ip=null, details=null) %}
+<div class="flex items-start gap-3">
+  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+    {% if avatar %}
+      <img src="{{ avatar }}" alt="{{ user }}" class="w-8 h-8 rounded-full">
+    {% else %}
+      <span class="text-sm font-medium text-gray-600">{{ user|first|upper }}</span>
+    {% endif %}
+  </div>
+
+  <div class="flex-1">
+    <div class="flex items-start justify-between">
+      <p class="text-sm text-gray-900">
+        <span class="font-medium">{{ user }}</span>
+        <span class="text-gray-600">{{ action }}</span>
+      </p>
+      {% if type %}
+        <span class="text-xs px-1.5 py-0.5 rounded
+          {% if type == 'success' %}bg-green-100 text-green-800
+          {% elif type == 'warning' %}bg-amber-100 text-amber-800
+          {% elif type == 'error' %}bg-red-100 text-red-800
+          {% else %}bg-blue-100 text-blue-800{% endif %}">
+          {{ type }}
+        </span>
+      {% endif %}
+    </div>
+
+    {% if time %}
+      <p class="mt-1 text-xs text-gray-500">
+        {{ time }}{% if ip %} · {{ ip }}{% endif %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
