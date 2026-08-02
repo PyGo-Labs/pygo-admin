@@ -1,0 +1,51 @@
+/* dist/admin.css — PyGo Admin CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Admin-specific overrides */
+.admin-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 24px;
+}
+
+.admin-content {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* DataTable enhancements */
+.data-table-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Form field focus rings */
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus {
+  outline: 2px solid #2563eb;
+  border-color: transparent;
+}
+
+/* Audit timeline */
+.audit-timeline {
+  position: relative;
+  border-left: 2px solid #e5e7eb;
+}
+
+.audit-timeline-item {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.audit-timeline-item:last-child {
+  padding-bottom: 0;
+}

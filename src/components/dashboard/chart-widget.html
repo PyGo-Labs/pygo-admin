@@ -1,0 +1,115 @@
+{# src/components/dashboard/chart-widget.html #}
+{% macro chart_widget(title, type="line", data=[], labels=[], height="250px") %}
+<div class="bg-white rounded-xl shadow-md p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+    <select class="text-sm text-gray-600 border border-gray-300 rounded px-2 py-1">
+      <option value="7">Últimos 7 días</option>
+      <option value="30">Últimos 30 días</option>
+      <option value="90">Últimos 90 días</option>
+    </select>
+  </div>
+
+  <div class="relative" style="height: {{ height }}">
+    <canvas id="chart-{{ title|slug }}" 
+            data-type="{{ type }}"
+            data-labels="{{ labels|join(',') }}"
+            data-values="{{ data|join(',') }}"
+            width="400" height="250"
+            class="w-full h-full"></canvas>
+    <div x-show="!chartLoaded" class="absolute inset-0 flex items-center justify-center">
+      <div class="text-gray-400">Cargando gráfico...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const canvas = document.getElementById('chart-{{ title|slug }}');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const chartType = '{{ type }}';
+  const labels = {{ labels|tojson|safe }};
+  const data = {{ data|tojson|safe }};
+
+  new Chart(ctx, {
+    type: chartType,
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '{{ title }}',
+        data: data,
+        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        borderColor: 'rgba(37, 99, 235, 1)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          border: { display: false },
+          ticks: { color: '#9ca3af', font: { size: 11 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#9ca3af', font: { size: 11 } }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f2937',
+          titleColor: '#f9fafb',
+          bodyColor: '#d1d5db',
+          padding: 8,
+          borderRadius: 6
+        }
+      },
+      animation: false
+    }
+  });
+});
+</script>
+{% endmacro %}
+
+{% macro stat_grid(stats=[]) %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {% for stat in stats %}
+  <div class="bg-white rounded-xl shadow-md p-6 text-center">
+    <div class="flex items-center justify-center mb-3"
+      {% if stat.icon_class %}
+      class="flex items-center justify-center text-blue-600 mb-3"
+      {% endif %}>
+      {% if stat.icon %}
+        {{ stat.icon|safe }}
+      {% endif %}
+      {% if stat.icon_class %}
+        <svg class="w-6 h-6 {{ stat.icon_class }}"></svg>
+      {% endif %}
+    </div>
+    <div class="text-3xl font-bold text-gray-900 mb-1"
+         data-stat="{{ stat.field }}"
+         x-text="formatNumber({{ stat.value }})"></div>
+    <div class="text-sm text-gray-500">{{ stat.label }}</div>
+    {% if stat.trend %}
+    <div class="mt-2 flex items-center justify-center text-xs">
+      {% if stat.trend > 0 %}
+        <span class="text-green-600">↗ +{{ stat.trend }}%</span>
+      {% elif stat.trend < 0 %}
+        <span class="text-red-600">↘ {{ stat.trend }}%</span>
+      {% else %}
+        <span class="text-gray-500">→ 0%</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

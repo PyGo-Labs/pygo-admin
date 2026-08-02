@@ -1,0 +1,142 @@
+{# src/components/management/user-management.html #}
+{% macro user_table(users=[], roles=[], permissions=[]) %}
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+
+  <!-- Toolbar -->
+  <div class="p-4 border-b border-gray-200">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <input type="text"
+          x-model.debounce.500ms="userSearch"
+          @input="filterUsers"
+          placeholder="Buscar usuarios..."
+          class="pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      <button @click="showUserForm = true"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Nuevo Usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- User table -->
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <template x-for="user in filteredUsers" :key="user.id">
+        <tr class="hover:bg-gray-50">
+
+          <!-- ID -->
+          <td class="px-4 py-3 text-sm text-gray-500"
+            x-text="user.id"></td>
+
+          <!-- Name + Avatar -->
+          <td class="px-6 py-3">
+            <div class="flex items-center gap-3">
+              <img :src="user.avatar|default('/img/avatar.png')"
+                :alt="user.name"
+                class="w-8 h-8 rounded-full">
+              <div>
+                <div class="text-sm font-medium text-gray-900" x-text="user.name"></div>
+                <div class="text-xs text-gray-500" x-text="user.created_at|formatDate"></div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Email -->
+          <td class="px-6 py-3 text-sm text-gray-700" x-text="user.email"></td>
+
+          <!-- Role -->
+          <td class="px-6 py-3 text-sm text-gray-700">
+            <span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full"
+              x-text="user.role|default('user')"></span>
+          </td>
+
+          <!-- Status -->
+          <td class="px-6 py-3 text-sm">
+            <span :class="{
+              'bg-green-100 text-green-800': user.active,
+              'bg-gray-100 text-gray-600': !user.active
+            }" class="px-2 py-1 rounded-full">
+              <span x-show="user.active">Activo</span>
+              <span x-show="!user.active">Inactivo</span>
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="px-6 py-3 text-right">
+            <div class="flex justify-end gap-1">
+              <button @click="editUser(user)"
+                class="p-1 text-blue-600 hover:bg-blue-50 rounded">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-4-9l-7 7m0 0v4h4l7-7m-4 0V3m0 0h-4" />
+                </svg>
+              </button>
+              <button @click="deleteUser(user)"
+                class="p-1 text-red-600 hover:bg-red-50 rounded">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142a2 2 0 01-1.997 1.858H7.864a2 2 0 01-1.997-1.857L5 7m5 5v5m4-5v5m4-5 1-5H6l1 5m4-5V3a1 1 0 011-1h2a1 1 0 011 1v5" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{% macro role_manager(roles=[]) %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {% for role in roles %}
+  <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-bold text-gray-900">{{ role.name|title }}</h3>
+      <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">{{ role.permissions|length }} permisos</span>
+    </div>
+
+    <p class="text-sm text-gray-600 mb-4">{{ role.description }}</p>
+
+    <div class="space-y-1 mb-4">
+      {% for perm in role.permissions|slice(0, 5) %}
+      <label class="flex items-center text-sm">
+        <input type="checkbox"
+          {% if perm in role.permissions %}checked{% endif %}
+          class="mr-2 rounded border-gray-300 text-blue-600">
+        {{ perm }}
+      </label>
+      {% endfor %}
+      {% if role.permissions|length > 5 %}
+      <button class="text-xs text-blue-600">
+        +{{ role.permissions|length - 5 }} más
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50">Editar</button>
+      <button class="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
