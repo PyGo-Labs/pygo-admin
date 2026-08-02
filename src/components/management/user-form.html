@@ -1,0 +1,171 @@
+{# src/components/management/user-form.html #}
+{% macro user_form(
+  user=null,
+  roles=[],
+  action="create"
+) %}
+<form x-data="userForm({
+  roles: {{ roles|tojson|safe }},
+  user: {{ user|tojson|safe }}
+})" x-init="init()" @submit.prevent="save()"
+  class="space-y-8 bg-white rounded-xl shadow-lg p-8">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center pb-6 border-b border-gray-200">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900"
+        x-text="action === 'edit' ? 'Editar Usuario' : 'Nuevo Usuario'"></h2>
+      <p class="text-sm text-gray-600 mt-1"
+        x-text="action === 'edit' ? 'Actualice los datos del usuario' : 'Complete los datos del nuevo usuario'"></p>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" @click="goBack()"
+        class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+        Cancelar
+      </button>
+      <button type="submit"
+        :disabled="loading || !isValid()"
+        class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+        <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span x-text="loading ? 'Guardando...' : (action === 'edit' ? 'Actualizar' : 'Crear')"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Left column: Main info -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Personal Info -->
+      <div class="border border-gray-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Información Personal</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Nombre completo <span class="text-red-500">*</span>
+            </label>
+            <input type="text"
+              x-model="formData.name"
+              :class="{'border-red-300': errors.name}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            <p x-show="errors.name" x-text="errors.name"
+              class="mt-1 text-xs text-red-600"></p>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Email <span class="text-red-500">*</span>
+            </label>
+            <input type="email"
+              x-model="formData.email"
+              :class="{'border-red-300': errors.email}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            <p x-show="errors.email" x-text="errors.email"
+              class="mt-1 text-xs text-red-600"></p>
+          </div>
+
+          <!-- Username -->
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Nombre de usuario <span class="text-red-500">*</span>
+            </label>
+            <input type="text"
+              x-model="formData.username"
+              :class="{'border-red-300': errors.username}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            <p x-show="errors.username" x-text="errors.username"
+              class="mt-1 text-xs text-red-600"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="border border-gray-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">
+          {{ action === 'edit' ? 'Cambiar contraseña' : 'Contraseña' }}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              {{ action === 'edit' ? 'Nueva contraseña' : 'Contraseña' }} <span class="text-red-500">*</span>
+            </label>
+            <input type="password" x-model="formData.password"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar <span class="text-red-500">*</span>
+            </label>
+            <input type="password" x-model="formData.password_confirm"
+              :class="{'border-red-300': errors.password_confirm}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            <p x-show="errors.password_confirm" x-text="errors.password_confirm"
+              class="mt-1 text-xs text-red-600"></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column: Roles + Permissions -->
+    <div class="space-y-6">
+
+      <!-- Roles -->
+      <div class="border border-gray-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Roles</h3>
+        <div class="space-y-2">
+          <template x-for="role in roles" :key="role.id">
+            <label class="flex items-center py-2 cursor-pointer">
+              <input type="checkbox"
+                :value="role.id"
+                x-model="formData.roles"
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700" x-text="role.name"></span>
+            </label>
+          </template>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="border border-gray-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Estado</h3>
+        <label class="flex items-center justify-between py-2">
+          <span class="text-sm text-gray-700">Usuario activo</span>
+          <label class="relative inline-flex h-5 w-9 items-center rounded-full">
+            <input type="checkbox" x-model="formData.is_active" class="peer sr-only">
+            <div class="h-5 w-9 bg-gray-200 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+          </label>
+        </label>
+      </div>
+
+      <!-- Permissions -->
+      <div class="border border-gray-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase">Permisos Específicos</h3>
+        <div class="space-y-2 max-h-48 overflow-y-auto">
+          <template x-for="perm in allPermissions" :key="perm">
+            <label class="flex items-center py-1 cursor-pointer">
+              <input type="checkbox"
+                :value="perm"
+                x-model="formData.permissions"
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+              <span class="text-sm text-gray-700" x-text="perm"></span>
+            </label>
+          </template>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</form>
+{% endmacro %}

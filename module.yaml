@@ -1,6 +1,6 @@
 name: pygo-admin
-version: 0.1.0
-description: "Admin panel components for PyGo — DataTable, FormBuilder, Dashboard widgets"
+version: 0.4.0
+description: "Advanced admin panel components for PyGo — DataTable, FormBuilder, RBAC, Dashboard, Reports"
 author: "PyGo Labs"
 homepage: "https://pygo.dev/admin"
 repository: "https://github.com/pygo-labs/pygo-admin"
@@ -10,7 +10,7 @@ pygo_version: ">=1.0.0"
 
 dependencies:
   modules:
-    - pygo-ui: ">=0.1.0"  # Hereda Button, Input, Card, Modal, layouts, themes
+    - pygo-ui: ">=0.2.0"  # Hereda Button, Input, Card, Modal, layouts, themes, icons
 
   assets:
     - chart.js: "^4.4.0"
@@ -25,8 +25,24 @@ features:
     description: "Auto-generated forms from models"
     enabled: true
 
-  - name: "dashboard"
-    description: "Admin dashboard widgets (KPIs, charts)"
+  - name: "audit-log"
+    description: "Audit trail viewer and change diff"
+    enabled: true
+
+  - name: "reports"
+    description: "Report builder with multi-format export"
+    enabled: true
+
+  - name: "settings"
+    description: "System configuration panel"
+    enabled: true
+
+  - name: "user-management"
+    description: "User creation, editing, roles assignment"
+    enabled: true
+
+  - name: "role-manager"
+    description: "RBAC role and permission management"
     enabled: true
 
 ui:

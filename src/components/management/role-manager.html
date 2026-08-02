@@ -1,0 +1,107 @@
+{# src/components/management/role-manager.html #}
+{% macro role_manager(roles=[], permissions=[]) %}
+<div x-data="roleManager({
+  roles: {{ roles|tojson|safe }},
+  permissions: {{ permissions|tojson|safe }}
+}) class="
+  class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center pb-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Gestión de Roles y Permisos</h2>
+      <p class="text-sm text-gray-600">Administre roles y sus permisos asociados</p>
+    </div>
+    <button @click="showRoleForm = true"
+      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+      <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Nuevo Rol
+    </button>
+  </div>
+
+  <!-- Roles table -->
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Permisos</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <template x-for="role in roles" :key="role.id">
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded"
+                  x-text="role.type|default('custom')"></span>
+                <span class="font-medium text-gray-900" x-text="role.name"></span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600"
+              x-text="role.description|default('Sin descripción')"></td>
+            <td class="px-6 py-4">
+              <div class="flex flex-wrap gap-1">
+                <template x-for="perm in role.permissions" :key="perm">
+                  <span class="px-2 py-1 text-xs bg-blue-50 text-blue-800 rounded"
+                    x-text="perm"></span>
+                </template>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex justify-end gap-1">
+                <button @click="editRole(role)"
+                  class="p-1 text-blue-600 hover:bg-blue-50 rounded">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-4-9l-7 7m0 0v4h4l7-7m-4 0V3m0 0h-4" />
+                  </svg>
+                </button>
+                <button @click="duplicateRole(role)"
+                  class="p-1 text-gray-600 hover:bg-gray-50 rounded">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v3m0 0v2m0-2h2m-2 0H9" />
+                  </svg>
+                </button>
+                <button @click="deleteRole(role)"
+                  class="p-1 text-red-600 hover:bg-red-50 rounded">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142a2 2 0 01-1.997 1.858H7.864a2 2 0 01-1.997-1.857L5 7m5 5v5m4-5v5m4-5 1-5H6l1 5m4-5V3a1 1 0 011-1h2a1 1 0 011 1v5" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Permission groups -->
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Permisos Disponibles</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <template x-for="(group, index) in permissionGroups" :key="index">
+        <div class="border border-gray-200 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 mb-3" x-text="group.name"></h4>
+          <div class="space-y-2">
+            <label x-for="perm in group.permissions" :key="perm" class="flex items-center py-1">
+              <input type="checkbox"
+                :value="perm"
+                x-model="selectedPermissions"
+                class="mr-2 rounded border-gray-300 text-blue-600">
+              <span class="text-sm text-gray-700" x-text="perm"></span>
+            </label>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+</div>
+{% endmacro %}

@@ -1,0 +1,153 @@
+{# src/components/management/settings-panel.html #}
+{% macro settings_panel(
+  sections=[],
+  model=null
+) %}
+<div x-data="settingsPanel({
+  sections: {{ sections|tojson|safe }},
+  initialData: {{ model|tojson|safe }}
+})" x-init="init()" class="bg-white rounded-xl shadow-lg overflow-hidden">
+
+  <!-- Header -->
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-xl font-bold text-gray-900">Configuración del Sistema</h2>
+    <p class="text-sm text-gray-600 mt-1">Administre los ajustes de su aplicación</p>
+  </div>
+
+  <!-- Sections navigation -->
+  <div class="flex border-b border-gray-200 bg-gray-50">
+    <template x-for="(section, index) in sections" :key="section.id">
+      <button @click="activeSection = section.id"
+        :class="activeSection === section.id
+          ? 'border-blue-600 text-blue-600 bg-white'
+          : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100'"
+        class="px-6 py-3 text-sm font-medium border-b-2 transition-all">
+        <span x-text="section.title"></span>
+        <span x-show="section.unsaved"
+              class="ml-2 w-2 h-2 bg-red-500 rounded-full inline-block"
+              x-cloak></span>
+      </button>
+    </template>
+  </div>
+
+  <!-- Section content -->
+  <div class="p-6">
+    <template x-for="section in sections" :key="section.id">
+      <div x-show="activeSection === section.id" x-cloak>
+
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4"
+            x-text="section.title"></h3>
+
+          <div class="space-y-6">
+            <template x-for="field in section.fields" :key="field.name">
+              <div class="field-row">
+
+                <!-- Text / Email / Password -->
+                <template x-if="['text','email','password','number'].includes(field.type)">
+                  <div>
+                    <label class="flex items-center justify-between mb-1">
+                      <span class="text-sm font-medium text-gray-700" x-text="field.label"></span>
+                      <span x-show="field.required" class="text-red-500">*</span>
+                    </label>
+                    <input :type="field.type"
+                      x-model="values[field.name]"
+                      :placeholder="field.placeholder"
+                      :disabled="field.disabled"
+                      :class="{
+                        'w-full px-3 py-2 border rounded-lg text-sm': true,
+                        'border-red-300': hasError(field.name),
+                        'border-gray-300': !hasError(field.name)
+                      }">
+
+                    <p x-show="hasError(field.name)"
+                      class="mt-1 text-xs text-red-600"
+                      x-text="errors[field.name]"
+                      x-cloak></p>
+                    <p x-show="field.help && !hasError(field.name)"
+                      class="mt-1 text-xs text-gray-500"
+                      x-text="field.help"
+                      x-cloak></p>
+                  </div>
+                </template>
+
+                <!-- Select -->
+                <template x-if="field.type === 'select'">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      x-text="field.label"></label>
+                    <select x-model="values[field.name]"
+                      :disabled="field.disabled"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                      <option value="" disabled selected>Seleccione...</option>
+                      <template x-for="opt in field.options" :key="opt.value">
+                        <option :value="opt.value" x-text="opt.label"></option>
+                      </template>
+                    </select>
+                  </div>
+                </template>
+
+                <!-- Toggle -->
+                <template x-if="field.type === 'boolean'">
+                  <div class="flex items-center justify-between py-2">
+                    <div>
+                      <label class="text-sm font-medium text-gray-700" x-text="field.label"></label>
+                      <p x-show="field.help" class="text-xs text-gray-500" x-text="field.help" x-cloak></p>
+                    </div>
+                    <label class="relative inline-flex h-5 w-9 items-center rounded-full">
+                      <input type="checkbox"
+                        x-model="values[field.name]"
+                        class="peersr-only">
+                      <div class="h-5 w-9 bg-gray-200 rounded-full peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+          <button @click="resetSection(section.id)"
+            class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button @click="saveSection(section.id)"
+            :disabled="loading || !hasChanges(section.id)"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            <svg x-show="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro setting_item(label, value, type="text", editable=true, help=null) %}
+<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+  <div class="flex-1">
+    <div class="flex items-center gap-2">
+      <label class="font-medium text-gray-900">{{ label }}</label>
+      {% if help %}
+        <span class="text-gray-400 cursor-help" title="{{ help }}">?</span>
+      {% endif %}
+    </div>
+    {% if help %}
+      <p class="text-sm text-gray-500 mt-1">{{ help }}</p>
+    {% endif %}
+  </div>
+  {% if editable %}
+    <input :value="{{ value }}"
+      type="{{ type }}"
+      class="w-48 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+  {% else %}
+    <span class="text-sm text-gray-700">{{ value }}</span>
+  {% endif %}
+</div>
+{% endmacro %}
